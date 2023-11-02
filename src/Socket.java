@@ -27,15 +27,31 @@ public class Socket extends Thread{
         boolean isDataPackage = data.substring(0,3).equals("2000");
 
         if(isDataPackage){
-            content = data.substring(3).split(":");
+            PDU pdu = new PDU(data.substring(3));
+            destinationRoutine(pdu);
         }else {
             tokenRoutine();
         }
     }
-    private void sendPackage(String header){
-        packageToSend = header.toCharArray();
+    private void destinationRoutine(PDU pdu) {
+        if(pdu.getDestinationNickname().equals(Enviroment.machineName)){
+
+        }else{
+            sendPackage(pdu);
+        }
+    }
+
+    private void tokenRoutine() {
+    }
+
+    private void sendPackage(PDU pdu){
+        byte[] packageToSend = pdu.getOriginalData().getBytes();
         DatagramPacket packet
-                = new DatagramPacket(packageToSend, packageToSend.length, Enviroment.nextIp, Enviroment.port);
-        socket.send(packet);
+                = new DatagramPacket(packageToSend, packageToSend.length, Enviroment.nextIp, Enviroment.nextIp);
+        try {
+            socket.send(packet);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -5,10 +5,7 @@ public class Main {
 
         new Enviroment();
 
-        console.log();
-
-        Enviroment.nextIp("blabla");
-
+        System.out.println();
 
         new Socket();
     }
