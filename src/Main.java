@@ -5,7 +5,7 @@ public class Main {
 
         new Enviroment();
 
-        System.out.println();
+        System.out.println("Salve");
 
         new Socket();
     }

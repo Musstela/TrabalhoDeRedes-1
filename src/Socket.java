@@ -1,6 +1,8 @@
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 
 public class Socket extends Thread{
@@ -37,17 +39,27 @@ public class Socket extends Thread{
         if(pdu.getDestinationNickname().equals(Enviroment.machineName)){
 
         }else{
-            sendPackage(pdu);
+            try {
+                sendPackage(pdu);
+            } catch (NumberFormatException | UnknownHostException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     private void tokenRoutine() {
     }
 
-    private void sendPackage(PDU pdu){
+    private void sendPackage(PDU pdu) throws NumberFormatException, UnknownHostException{
         byte[] packageToSend = pdu.getOriginalData().getBytes();
+        
         DatagramPacket packet
-                = new DatagramPacket(packageToSend, packageToSend.length, Enviroment.nextIp, Enviroment.nextIp);
+                = new DatagramPacket(
+                    packageToSend,
+                    packageToSend.length,
+                    InetAddress.getByAddress(Enviroment.nextIp.getBytes()),
+                    Integer.valueOf(Enviroment.port)
+                );
         try {
             socket.send(packet);
         } catch (IOException e) {
