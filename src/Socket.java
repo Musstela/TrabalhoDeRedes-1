@@ -6,7 +6,13 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 
 public class Socket extends Thread{
+    private final Environment env;
     private DatagramSocket socket;
+
+    public Socket(Environment env) {
+        this.env = env;
+    }
+
     public void run(){
         while (true) {
             byte[] charArray = new byte[120];
@@ -36,7 +42,7 @@ public class Socket extends Thread{
         }
     }
     private void destinationRoutine(PDU pdu) {
-        if(pdu.getDestinationNickname().equals(Enviroment.machineName)){
+        if(pdu.getDestinationNickname().equals(env.machineName)){
 
         }else{
             try {
@@ -57,8 +63,8 @@ public class Socket extends Thread{
                 = new DatagramPacket(
                     packageToSend,
                     packageToSend.length,
-                    InetAddress.getByAddress(Enviroment.nextIp.getBytes()),
-                    Integer.valueOf(Enviroment.port)
+                    InetAddress.getByAddress(env.nextIp.getBytes()),
+                    Integer.valueOf(env.port)
                 );
         try {
             socket.send(packet);

@@ -3,10 +3,9 @@
 public class Main {
     public static void main(String[] args) {
 
-        new Enviroment();
-
+        Environment env = new Environment();
         System.out.println("Salve");
 
-        new Socket();
+        new Socket(env);
     }
 }
