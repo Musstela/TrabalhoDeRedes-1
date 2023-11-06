@@ -1,3 +1,6 @@
+import java.util.Objects;
+import java.util.zip.CRC32;
+
 public class PDU {
     private String originNickname;
     private String destinationNickname;
@@ -37,6 +40,35 @@ public class PDU {
     }
 
     public String getOriginalData(){
+
+        if (originalData.isEmpty()) {
+            CRC32 temp = new CRC32();
+            temp.update(getMessage().getBytes());
+            originalData =
+                    "2000;"
+                    + getOriginNickname()
+                    + ":" + getDestinationNickname()
+                    + ":" + getErrorLog()
+                    + ":" + temp.getValue()
+                    + ":" + getMessage();
+        }
         return originalData;
+    }
+
+    public void setErrorLog(String log) {
+        this.errorLog = log;
+        originalData =
+                "2000;"
+                + getOriginNickname()
+                + ":" + getDestinationNickname()
+                + ":" + getErrorLog()
+                + ":" + getCrc()
+                + ":" + getMessage();
+    }
+
+    public boolean checkCrc() {
+        CRC32 temp = new CRC32();
+        temp.update(getMessage().getBytes());
+        return Objects.equals(String.valueOf(temp.getValue()), getCrc());
     }
 }

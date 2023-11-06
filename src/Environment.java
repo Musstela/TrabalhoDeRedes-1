@@ -7,7 +7,7 @@ public class Environment {
     public String machineName;
     public int tokenTime;
     public Boolean token;
-    public String port;
+    public int port;
 
     public Environment() {
         try {
@@ -19,7 +19,7 @@ public class Environment {
                 if (data.contains(":")) {
                     String[] temp = data.split(":");
                     nextIp = temp[0];
-                    port = temp[1];
+                    port = Integer.parseInt(temp[1]);
                 } else if (isNumeric(data)) {
                     tokenTime = Integer.parseInt(data);
                 } else if (data.equalsIgnoreCase("true")||data.equalsIgnoreCase("false")) {

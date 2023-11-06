@@ -1,19 +1,33 @@
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
+import java.util.Scanner;
 
 public class Socket extends Thread{
     private final Environment env;
     private DatagramSocket socket;
 
-    public Socket(Environment env) {
+    private LinkedList<PDU> PduLine;
+
+    public Socket(Environment env) throws SocketException {
         this.env = env;
+        this.socket = new DatagramSocket(env.port);
+        this.PduLine = new LinkedList<>();
     }
 
     public void run(){
+        if(env.token) {
+            System.out.println("Press enter to send package");
+            Scanner myObj = new Scanner(System.in);  // Create a Scanner object
+            myObj.nextLine();
+            myObj.close();
+            try {
+                this.tokenRoutine();
+            } catch (UnknownHostException e) {
+                throw new RuntimeException(e);
+            }
+        }
         while (true) {
             byte[] charArray = new byte[120];
 
@@ -30,7 +44,7 @@ public class Socket extends Thread{
         }
     }
 
-    private void processData(byte[] packegeContent){
+    private void processData(byte[] packegeContent) throws UnknownHostException {
         String data = new String(packegeContent, StandardCharsets.UTF_8);
         boolean isDataPackage = data.substring(0,3).equals("2000");
 
@@ -43,17 +57,63 @@ public class Socket extends Thread{
     }
     private void destinationRoutine(PDU pdu) {
         if(pdu.getDestinationNickname().equals(env.machineName)){
-
-        }else{
-            try {
-                sendPackage(pdu);
-            } catch (NumberFormatException | UnknownHostException e) {
-                e.printStackTrace();
+            if(pdu.checkCrc()) {
+                pdu.setErrorLog("ACK");
+                System.out.println("Packet for this computer received, resending to origin");
             }
+            else {
+                pdu.setErrorLog("NAK");
+                System.out.println("Packet for this computer received with errors, resending to origin");
+            }
+        }
+        if(pdu.getOriginNickname().equals(env.machineName)){
+            if(pdu.getErrorLog().equals("maquinanaoexiste")){
+                System.out.println("Packet from this computer has unreachable destination, discarding");
+                PduLine.removeFirst();
+                try {
+                    sendToken();
+                } catch (UnknownHostException e) {
+                    throw new RuntimeException(e);
+                }
+                return;
+            } else if (pdu.getErrorLog().equals("NAK")) {
+                System.out.println("Packet from this computer has error, resending");
+                try {
+                    sendPackage(PduLine.getFirst());
+                } catch (UnknownHostException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        try {
+            sendPackage(pdu);
+        } catch (NumberFormatException | UnknownHostException e) {
+            e.printStackTrace();
         }
     }
 
-    private void tokenRoutine() {
+    private void tokenRoutine() throws UnknownHostException {
+        if(!PduLine.isEmpty()){
+            sendPackage(PduLine.getFirst());
+        }
+        else{
+            sendToken();
+        }
+    }
+
+    private void sendToken() throws UnknownHostException {
+        DatagramPacket packet
+                = new DatagramPacket(
+                "2000".getBytes(),
+                "2000".length(),
+                InetAddress.getByAddress(env.nextIp.getBytes()),
+                env.port
+        );
+        try {
+            socket.send(packet);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void sendPackage(PDU pdu) throws NumberFormatException, UnknownHostException{
@@ -64,7 +124,7 @@ public class Socket extends Thread{
                     packageToSend,
                     packageToSend.length,
                     InetAddress.getByAddress(env.nextIp.getBytes()),
-                    Integer.valueOf(env.port)
+                env.port
                 );
         try {
             socket.send(packet);
