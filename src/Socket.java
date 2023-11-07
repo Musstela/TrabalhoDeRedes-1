@@ -10,10 +10,13 @@ public class Socket extends Thread{
 
     private LinkedList<PDU> PduLine;
 
+    private PDU newPackage;
+
     public Socket(Environment env) throws SocketException {
         this.env = env;
         this.socket = new DatagramSocket(env.port);
         this.PduLine = new LinkedList<>();
+        newPackage = new PDU("2000;DHCPaia:Mary:maquinanaoexiste:19385749:Oi pessoal!");
     }
 
     public void run(){
@@ -47,7 +50,7 @@ public class Socket extends Thread{
     private void processData(byte[] packegeContent) throws UnknownHostException {
         String data = new String(packegeContent, StandardCharsets.UTF_8);
 
-        if(data.substring(0,3).equals("2000")){
+        if(data.substring(0,12).contains("2000")){
             PDU pdu = new PDU(data.substring(3));
             destinationRoutine(pdu);
         }else {
@@ -86,6 +89,7 @@ public class Socket extends Thread{
             }
         }
         try {
+            System.out.println("Packet not for us, passing forward");
             sendPackage(pdu);
         } catch (NumberFormatException | UnknownHostException e) {
             e.printStackTrace();
@@ -93,10 +97,12 @@ public class Socket extends Thread{
     }
 
     private void tokenRoutine() throws UnknownHostException {
+        System.out.println("I have the token");
         if(!PduLine.isEmpty()){
             sendPackage(PduLine.getFirst());
         }
         else{
+            System.out.println("There goes my token");
             sendToken();
         }
     }
@@ -107,7 +113,7 @@ public class Socket extends Thread{
                 "1000".getBytes(),
                 "1000".length(),
                 InetAddress.getByName(env.nextIp),
-                env.port
+                20001
         );
         try {
             socket.send(packet);
@@ -118,14 +124,14 @@ public class Socket extends Thread{
 
     private void sendPackage(PDU pdu) throws NumberFormatException, UnknownHostException{
         byte[] packageToSend = pdu.getOriginalData().getBytes();
-        
+
         DatagramPacket packet
                 = new DatagramPacket(
-                    packageToSend,
-                    packageToSend.length,
-                    InetAddress.getByAddress(env.nextIp.getBytes()),
-                env.port
-                );
+                packageToSend,
+                packageToSend.length,
+                InetAddress.getByName(env.nextIp),
+                20001
+        );
         try {
             socket.send(packet);
         } catch (IOException e) {
@@ -137,7 +143,7 @@ public class Socket extends Thread{
         if (PduLine.size() >= 10) {
             PduLine.add(add);
             return true;
-            }
+        }
         return false;
     }
 }
