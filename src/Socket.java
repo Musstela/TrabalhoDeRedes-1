@@ -4,6 +4,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.Scanner;
 
+import static java.time.LocalDateTime.now;
+
 public class Socket extends Thread{
     private final Environment env;
     private DatagramSocket socket;
@@ -40,24 +42,19 @@ public class Socket extends Thread{
                         = new DatagramPacket(charArray, charArray.length);
                 socket.receive(packet);
 
-                processData(packet.getData());
+                processData(packet.getData(), packet.getLength());
 
             } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            try {
-                Thread.sleep(env.tokenTime * 1000L);
-            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
     }
 
-    private void processData(byte[] packegeContent) throws UnknownHostException {
-        String data = new String(packegeContent, StandardCharsets.UTF_8);
-
-        if(data.substring(0,12).contains("2000")){
-            PDU pdu = new PDU(data.substring(3));
+    private void processData(byte[] packegeContent, int length) throws UnknownHostException {
+        String data = new String(packegeContent, StandardCharsets.UTF_8).substring(0,length);
+        if(data.substring(0,5).contains("2000")){
+            PDU pdu = new PDU(data.substring(5));
+            this.log("Package received: \n" + pdu);
             destinationRoutine(pdu);
         }else {
             tokenRoutine();
@@ -74,8 +71,7 @@ public class Socket extends Thread{
                 System.out.println("Packet for this computer received with errors, resending to origin");
             }
         }
-        System.out.println(pdu.getOriginNickname());
-        if(pdu.getOriginNickname().equals(env.machineName)){
+        else if(pdu.getOriginNickname().equals(env.machineName)){
             if(pdu.getErrorLog().equals("maquinanaoexiste")){
                 System.out.println("Packet from this computer has unreachable destination, discarding");
                 PduLine.removeFirst();
@@ -95,8 +91,10 @@ public class Socket extends Thread{
                 return;
             }
         }
-        try {
+        else {
             System.out.println("Packet not for us, passing forward");
+        }
+        try {
             sendPackage(pdu);
         } catch (NumberFormatException | UnknownHostException e) {
             e.printStackTrace();
@@ -130,6 +128,7 @@ public class Socket extends Thread{
     }
 
     private void sendPackage(PDU pdu) throws NumberFormatException, UnknownHostException{
+        this.log("package being sent: \n" + pdu);
         byte[] packageToSend = pdu.getOriginalData().getBytes();
 
         DatagramPacket packet
@@ -152,5 +151,9 @@ public class Socket extends Thread{
             return true;
         }
         return false;
+    }
+
+    private void log(String log) {
+        System.out.println(now().getMinute() +":"+ now().getSecond() + " - " + log + "\n");
     }
 }

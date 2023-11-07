@@ -83,4 +83,14 @@ public class PDU {
         temp.update(getMessage().getBytes());
         return Objects.equals(String.valueOf(temp.getValue()), getCrc());
     }
+
+    public String toString(){
+        return
+                "originNickname: " + getOriginNickname() + "\n" +
+                "destinationNickname: " + getDestinationNickname() + "\n" +
+                "errorLog: " + getErrorLog() + "\n" +
+                "CRC: " + getCrc() + "\n" +
+                "message: " + getMessage();
+
+    }
 }
