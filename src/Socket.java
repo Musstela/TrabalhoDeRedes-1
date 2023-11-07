@@ -6,7 +6,7 @@ import java.util.Scanner;
 
 import static java.time.LocalDateTime.now;
 
-public class Socket extends Thread{
+public class Socket extends Thread {
     private final Environment env;
     private DatagramSocket socket;
 
@@ -18,11 +18,11 @@ public class Socket extends Thread{
         this.env = env;
         this.socket = new DatagramSocket(5000);
         this.PduLine = new LinkedList<>();
-        newPackage = new PDU("Oi pessoal!", "Deon",env.machineName);
+        newPackage = new PDU("Oi pessoal!", "Deon", env.machineName);
     }
 
-    public void run(){
-        if(env.token) {
+    public void run() {
+        if (env.token) {
             PduLine.add(newPackage);
             System.out.println("Press enter to send package");
             Scanner myObj = new Scanner(System.in);  // Create a Scanner object
@@ -47,50 +47,54 @@ public class Socket extends Thread{
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+            try {
+                Thread.sleep(env.tokenTime * 1000L);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
+
     }
 
     private void processData(byte[] packegeContent, int length) throws UnknownHostException {
-        String data = new String(packegeContent, StandardCharsets.UTF_8).substring(0,length);
-        if(data.substring(0,5).contains("2000")){
+        String data = new String(packegeContent, StandardCharsets.UTF_8).substring(0, length);
+        if (data.substring(0, 4).contains("2000")) {
             PDU pdu = new PDU(data.substring(5));
             this.log("Package received: \n" + pdu);
             destinationRoutine(pdu);
-        }else {
+        } else {
             tokenRoutine();
         }
     }
+
     private void destinationRoutine(PDU pdu) throws UnknownHostException {
-        if(pdu.getDestinationNickname().equals(env.machineName)){
-            if(pdu.checkCrc()) {
+        if (pdu.getDestinationNickname().equals(env.machineName)) {
+            if (pdu.checkCrc()) {
                 pdu.setErrorLog("ACK");
                 System.out.println("Packet for this computer received, resending to origin");
-            }
-            else {
+            } else {
                 pdu.setErrorLog("NAK");
                 System.out.println("Packet for this computer received with errors, resending to origin");
             }
         }
-        if(pdu.getOriginNickname().equals(env.machineName)){
-            if(pdu.getErrorLog().equals("maquinanaoexiste")){
-                System.out.println("Packet from this computer has unreachable destination, discarding");
+        if (pdu.getOriginNickname().equals(env.machineName)) {
+            if (pdu.getErrorLog().equals("maquinanaoexiste")) {
+                this.log("Packet from this computer has unreachable destination, discarding");
                 PduLine.removeFirst();
                 sendToken();
                 return;
             } else if (pdu.getErrorLog().equals("NAK")) {
-                System.out.println("Packet from this computer has error, resending");
+                this.log("Packet from this computer has error, resending");
                 sendPackage(PduLine.getFirst());
                 return;
-            }
-            else {
-                System.out.println("Packet from this computer successfully sent, removing from line");
+            } else {
+                this.log("Packet from this computer successfully sent, removing from line");
                 PduLine.removeFirst();
                 sendToken();
                 return;
             }
-        }
-        else {
-            System.out.println("Packet not for us, passing forward");
+        } else {
+            this.log("Packet not for us, passing forward");
         }
         try {
             sendPackage(pdu);
@@ -100,12 +104,11 @@ public class Socket extends Thread{
     }
 
     private void tokenRoutine() throws UnknownHostException {
-        System.out.println("I have the token");
-        if(!PduLine.isEmpty()){
+        this.log("I have the token");
+        if (!PduLine.isEmpty()) {
             sendPackage(PduLine.getFirst());
-        }
-        else{
-            System.out.println("There goes my token");
+        } else {
+            this.log("There goes my token");
             sendToken();
         }
     }
@@ -125,7 +128,7 @@ public class Socket extends Thread{
         }
     }
 
-    private void sendPackage(PDU pdu) throws NumberFormatException, UnknownHostException{
+    private void sendPackage(PDU pdu) throws NumberFormatException, UnknownHostException {
         this.log("package being sent: \n" + pdu);
         byte[] packageToSend = pdu.getOriginalData().getBytes();
 
@@ -152,6 +155,6 @@ public class Socket extends Thread{
     }
 
     private void log(String log) {
-        System.out.println(now().getMinute() +":"+ now().getSecond() + " - " + log + "\n");
+        System.out.println(now().getMinute() + ":" + now().getSecond() +  ":" + String.valueOf(now().getNano()).substring(0,2) + " - " + log + "\n");
     }
 }
