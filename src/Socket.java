@@ -46,9 +46,8 @@ public class Socket extends Thread{
 
     private void processData(byte[] packegeContent) throws UnknownHostException {
         String data = new String(packegeContent, StandardCharsets.UTF_8);
-        boolean isDataPackage = data.substring(0,3).equals("2000");
 
-        if(isDataPackage){
+        if(data.substring(0,3).equals("2000")){
             PDU pdu = new PDU(data.substring(3));
             destinationRoutine(pdu);
         }else {
@@ -83,6 +82,7 @@ public class Socket extends Thread{
                 } catch (UnknownHostException e) {
                     throw new RuntimeException(e);
                 }
+                return;
             }
         }
         try {
@@ -104,9 +104,9 @@ public class Socket extends Thread{
     private void sendToken() throws UnknownHostException {
         DatagramPacket packet
                 = new DatagramPacket(
-                "2000".getBytes(),
-                "2000".length(),
-                InetAddress.getByAddress(env.nextIp.getBytes()),
+                "1000".getBytes(),
+                "1000".length(),
+                InetAddress.getByName(env.nextIp),
                 env.port
         );
         try {
@@ -131,5 +131,13 @@ public class Socket extends Thread{
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean addPdu(PDU add) {
+        if (PduLine.size() >= 10) {
+            PduLine.add(add);
+            return true;
+            }
+        return false;
     }
 }
