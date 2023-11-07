@@ -16,7 +16,6 @@ public class PDU {
         errorLog = splittedContent[2];
         crc = splittedContent[3];
         message = splittedContent[4];
-        originalData = content;
     }
 
     public PDU(String message, String destinationNickname, String originNickname) {
@@ -55,7 +54,7 @@ public class PDU {
     }
     public String getOriginalData(){
 
-        if (originalData.isEmpty()) {
+        if (originalData == null) {
             originalData =
                     "2000;"
                     + getOriginNickname()

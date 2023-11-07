@@ -60,7 +60,7 @@ public class Socket extends Thread{
             tokenRoutine();
         }
     }
-    private void destinationRoutine(PDU pdu) {
+    private void destinationRoutine(PDU pdu) throws UnknownHostException {
         if(pdu.getDestinationNickname().equals(env.machineName)){
             if(pdu.checkCrc()) {
                 pdu.setErrorLog("ACK");
@@ -71,23 +71,21 @@ public class Socket extends Thread{
                 System.out.println("Packet for this computer received with errors, resending to origin");
             }
         }
-        else if(pdu.getOriginNickname().equals(env.machineName)){
+        if(pdu.getOriginNickname().equals(env.machineName)){
             if(pdu.getErrorLog().equals("maquinanaoexiste")){
                 System.out.println("Packet from this computer has unreachable destination, discarding");
                 PduLine.removeFirst();
-                try {
-                    sendToken();
-                } catch (UnknownHostException e) {
-                    throw new RuntimeException(e);
-                }
+                sendToken();
                 return;
             } else if (pdu.getErrorLog().equals("NAK")) {
                 System.out.println("Packet from this computer has error, resending");
-                try {
-                    sendPackage(PduLine.getFirst());
-                } catch (UnknownHostException e) {
-                    throw new RuntimeException(e);
-                }
+                sendPackage(PduLine.getFirst());
+                return;
+            }
+            else {
+                System.out.println("Packet from this computer successfully sent, removing from line");
+                PduLine.removeFirst();
+                sendToken();
                 return;
             }
         }
@@ -116,7 +114,7 @@ public class Socket extends Thread{
         DatagramPacket packet
                 = new DatagramPacket(
                 "1000".getBytes(),
-                "1000".length(),
+                "1000".getBytes().length,
                 InetAddress.getByName(env.nextIp),
                 env.port
         );
