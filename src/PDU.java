@@ -18,6 +18,15 @@ public class PDU {
         message = splittedContent[4];
         originalData = content;
     }
+
+    public PDU(String message, String destinationNickname, String originNickname) {
+        this.originNickname = originNickname;
+        this.destinationNickname = destinationNickname;
+        this.message = message;
+        this.errorLog = "maquinanaoexiste";
+        this.crc = String.valueOf(generateCrc());
+        originalData = null;
+    }
     
     public String getOriginNickname() {
         return originNickname;
@@ -39,17 +48,20 @@ public class PDU {
         return message;
     }
 
+    private long generateCrc() {
+        CRC32 temp = new CRC32();
+        temp.update(getMessage().getBytes());
+        return temp.getValue();
+    }
     public String getOriginalData(){
 
         if (originalData.isEmpty()) {
-            CRC32 temp = new CRC32();
-            temp.update(getMessage().getBytes());
             originalData =
                     "2000;"
                     + getOriginNickname()
                     + ":" + getDestinationNickname()
                     + ":" + getErrorLog()
-                    + ":" + temp.getValue()
+                    + ":" + generateCrc()
                     + ":" + getMessage();
         }
         return originalData;

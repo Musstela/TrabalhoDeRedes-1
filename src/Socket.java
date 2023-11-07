@@ -14,13 +14,14 @@ public class Socket extends Thread{
 
     public Socket(Environment env) throws SocketException {
         this.env = env;
-        this.socket = new DatagramSocket(env.port);
+        this.socket = new DatagramSocket(5000);
         this.PduLine = new LinkedList<>();
-        newPackage = new PDU("2000;DHCPaia:Mary:maquinanaoexiste:19385749:Oi pessoal!");
+        newPackage = new PDU("Oi pessoal!", "Deon",env.machineName);
     }
 
     public void run(){
         if(env.token) {
+            PduLine.add(newPackage);
             System.out.println("Press enter to send package");
             Scanner myObj = new Scanner(System.in);  // Create a Scanner object
             myObj.nextLine();
@@ -42,6 +43,11 @@ public class Socket extends Thread{
                 processData(packet.getData());
 
             } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                Thread.sleep(env.tokenTime * 1000L);
+            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -68,6 +74,7 @@ public class Socket extends Thread{
                 System.out.println("Packet for this computer received with errors, resending to origin");
             }
         }
+        System.out.println(pdu.getOriginNickname());
         if(pdu.getOriginNickname().equals(env.machineName)){
             if(pdu.getErrorLog().equals("maquinanaoexiste")){
                 System.out.println("Packet from this computer has unreachable destination, discarding");
@@ -113,7 +120,7 @@ public class Socket extends Thread{
                 "1000".getBytes(),
                 "1000".length(),
                 InetAddress.getByName(env.nextIp),
-                20001
+                env.port
         );
         try {
             socket.send(packet);
@@ -130,7 +137,7 @@ public class Socket extends Thread{
                 packageToSend,
                 packageToSend.length,
                 InetAddress.getByName(env.nextIp),
-                20001
+                env.port
         );
         try {
             socket.send(packet);
