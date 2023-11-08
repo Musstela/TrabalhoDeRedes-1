@@ -22,7 +22,7 @@ public class Environment {
                     port = Integer.parseInt(temp[1]);
                 } else if (isNumeric(data)) {
                     tokenTime = Integer.parseInt(data);
-                } else if (data.equalsIgnoreCase("true")||data.equalsIgnoreCase("false")) {
+                } else if (data.equalsIgnoreCase("true") || data.equalsIgnoreCase("false")) {
                     token = Boolean.parseBoolean(data);
                 } else {
                     machineName = data;
@@ -34,6 +34,7 @@ public class Environment {
             e.printStackTrace();
         }
     }
+
     public static boolean isNumeric(String strNum) {
         if (strNum == null) {
             return false;

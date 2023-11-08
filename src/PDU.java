@@ -9,7 +9,7 @@ public class PDU {
     private String message;
     private String originalData;
 
-    public PDU(String content){
+    public PDU(String content) {
         String[] splittedContent = content.split(":");
         originNickname = splittedContent[0];
         destinationNickname = splittedContent[1];
@@ -26,7 +26,16 @@ public class PDU {
         this.crc = String.valueOf(generateCrc());
         originalData = null;
     }
-    
+
+    public PDU(String message, String destinationNickname, String originNickname, boolean error) {
+        this.originNickname = originNickname;
+        this.destinationNickname = destinationNickname;
+        this.message = message;
+        this.errorLog = "maquinanaoexiste";
+        this.crc = error ? "This can't possibly be right" : String.valueOf(generateCrc());
+        originalData = null;
+    }
+
     public String getOriginNickname() {
         return originNickname;
     }
@@ -52,16 +61,17 @@ public class PDU {
         temp.update(getMessage().getBytes());
         return temp.getValue();
     }
-    public String getOriginalData(){
+
+    public String getOriginalData() {
 
         if (originalData == null) {
             originalData =
                     "2000;"
-                    + getOriginNickname()
-                    + ":" + getDestinationNickname()
-                    + ":" + getErrorLog()
-                    + ":" + generateCrc()
-                    + ":" + getMessage();
+                            + getOriginNickname()
+                            + ":" + getDestinationNickname()
+                            + ":" + getErrorLog()
+                            + ":" + generateCrc()
+                            + ":" + getMessage();
         }
         return originalData;
     }
@@ -70,11 +80,11 @@ public class PDU {
         this.errorLog = log;
         originalData =
                 "2000;"
-                + getOriginNickname()
-                + ":" + getDestinationNickname()
-                + ":" + getErrorLog()
-                + ":" + getCrc()
-                + ":" + getMessage();
+                        + getOriginNickname()
+                        + ":" + getDestinationNickname()
+                        + ":" + getErrorLog()
+                        + ":" + getCrc()
+                        + ":" + getMessage();
     }
 
     public boolean checkCrc() {
@@ -83,13 +93,13 @@ public class PDU {
         return Objects.equals(String.valueOf(temp.getValue()), getCrc());
     }
 
-    public String toString(){
+    public String toString() {
         return
                 "originNickname: " + getOriginNickname() + "\n" +
-                "destinationNickname: " + getDestinationNickname() + "\n" +
-                "errorLog: " + getErrorLog() + "\n" +
-                "CRC: " + getCrc() + "\n" +
-                "message: " + getMessage();
+                        "destinationNickname: " + getDestinationNickname() + "\n" +
+                        "errorLog: " + getErrorLog() + "\n" +
+                        "CRC: " + getCrc() + "\n" +
+                        "message: " + getMessage();
 
     }
 }
