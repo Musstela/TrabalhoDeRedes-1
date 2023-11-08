@@ -38,7 +38,7 @@ public class Socket extends Thread {
         // Loop principal para processar pacotes continuamente
         while (true) {
 
-            if (Duration.between(this.lastToken, Instant.now()).getSeconds() > 2L * env.tokenTime) {
+            if (Duration.between(this.lastToken, Instant.now()).getSeconds() > 2L * env.tokenTime && env.token) {
                 this.log("Humm, no token still? Seems like this ring is bigger than we though, or someone broke it :(");
             }
 
@@ -125,7 +125,7 @@ public class Socket extends Thread {
 
     private void tokenRoutine() throws UnknownHostException {
         this.log("I have the token");
-        if (Duration.between(this.lastToken, Instant.now()).getSeconds() < 2L * env.tokenTime) {
+        if (Duration.between(this.lastToken, Instant.now()).getSeconds() < 2L * env.tokenTime && env.token) {
             this.log("Humm, this was faster than expected, more than one token in this ring apparently");
         }
         if (!PduLine.isEmpty()) {
